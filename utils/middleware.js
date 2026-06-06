@@ -13,10 +13,22 @@ const blogFinder = async (req, res, next) => {
 const errorHandler = (error, req, res, next) => {
   console.error(error.message);
 
+  if (error.message === "data and salt arguments required") {
+    return res.status(400).json({
+      error: ["password is required and must not be empty"],
+    });
+  }
+
   if (
-    error.name === "SequelizeDatabaseError" ||
-    error.name === "SequelizeValidationError"
+    error.name === "SequelizeValidationError" ||
+    error.name === "SequelizeUniqueConstraintError"
   ) {
+    return res.status(400).json({
+      error: error.errors.map((err) => err.message),
+    });
+  }
+
+  if (error.name === "SequelizeDatabaseError") {
     return res.status(400).json({ error: error.message });
   }
 
