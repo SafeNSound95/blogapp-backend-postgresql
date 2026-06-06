@@ -2,11 +2,13 @@ const express = require("express");
 const { PORT } = require("./utils/config");
 const { connectToDb } = require("./utils/db");
 const blogRouter = require("./controllers/blogs");
+const userRouter = require("./controllers/users");
 const { errorHandler } = require("./utils/middleware");
 
 const app = express();
 app.use(express.json());
 app.use("/api/blogs", blogRouter);
+app.use("/api/users", userRouter);
 app.use(errorHandler);
 
 const main = async () => {
