@@ -13,9 +13,10 @@ const blogFinder = async (req, res, next) => {
 const errorHandler = (error, req, res, next) => {
   console.error(error.message);
 
-  if (error.name === "SequelizeDatabaseError") {
-    return res.status(400).json({ error: error.message });
-  } else if (error.name === "SequelizeValidationError") {
+  if (
+    error.name === "SequelizeDatabaseError" ||
+    error.name === "SequelizeValidationError"
+  ) {
     return res.status(400).json({ error: error.message });
   }
 
