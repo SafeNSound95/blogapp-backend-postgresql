@@ -1,4 +1,6 @@
 const { Blog } = require("../models");
+const jwt = require("jsonwebtoken");
+const { SECRET } = require("./config");
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id);
@@ -10,13 +12,37 @@ const blogFinder = async (req, res, next) => {
   next();
 };
 
+const tokenExtractor = async (req, res, next) => {
+  const authorization = req.get("authorization");
+  if (!authorization || !authorization.toLowerCase().startsWith("bearer "))
+    return res.status(401).json({ error: "Missing token" });
+
+  try {
+    req.token = jwt.verify(authorization.substring(7), SECRET);
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 const errorHandler = (error, req, res, next) => {
   console.error(error.message);
 
-  if (error.message === "data and salt arguments required") {
+  if (
+    error.message === "data and salt arguments required" ||
+    error.message === "data and hash arguments required"
+  ) {
     return res.status(400).json({
       error: ["password is required and must not be empty"],
     });
+  }
+
+  if (error.name === "JsonWebTokenError") {
+    return res.status(401).json({ error: error.message });
+  }
+
+  if (error.name === "TokenExpiredError") {
+    return res.status(401).json({ error: error.message });
   }
 
   if (
@@ -35,4 +61,4 @@ const errorHandler = (error, req, res, next) => {
   next(error);
 };
 
-module.exports = { blogFinder, errorHandler };
+module.exports = { blogFinder, errorHandler, tokenExtractor };
