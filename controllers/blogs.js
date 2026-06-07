@@ -3,7 +3,19 @@ const { Blog, User } = require("../models");
 const { blogFinder, tokenExtractor } = require("../utils/middleware");
 
 router.get("/", async (req, res) => {
-  const blogs = await Blog.findAll();
+  const blogs = await Blog.findAll({
+    attributes: {
+      exclude: ["userId"],
+    },
+    include: [
+      {
+        model: User,
+        attributes: {
+          exclude: ["password"],
+        },
+      },
+    ],
+  });
   res.json(blogs);
 });
 
@@ -20,7 +32,15 @@ router.post("/", tokenExtractor, async (req, res, next) => {
   }
 });
 
-router.delete("/:id", blogFinder, async (req, res) => {
+router.delete("/:id", tokenExtractor, blogFinder, async (req, res) => {
+  const user = await User.findByPk(req.token.id);
+  if (!user) {
+    return res.status(401).json({ error: "unauthorized user" });
+  }
+
+  if (req.blog.userId !== user.id)
+    return res.status(401).json({ error: "unauthorized user" });
+
   await req.blog.destroy();
   res.status(204).end();
 });
