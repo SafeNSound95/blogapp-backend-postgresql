@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node index.js",
-    "test": "cross-env TESTING=true node --test --test-concurrency=1",
+    "test": "cross-env TESTING=true node --test --test-concurrency=1 tests/api_ch3.test.js",
     "start:test": "cross-env TESTING=true node index.js"
   },
   "keywords": [],
