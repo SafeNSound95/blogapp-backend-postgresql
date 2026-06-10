@@ -1,6 +1,7 @@
 const { Blog } = require("../models");
 const jwt = require("jsonwebtoken");
 const { SECRET } = require("./config");
+const { Session, User } = require("../models");
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id);
@@ -19,10 +20,29 @@ const tokenExtractor = async (req, res, next) => {
 
   try {
     req.token = jwt.verify(authorization.substring(7), SECRET);
+    req.tokenRaw = authorization.substring(7);
     next();
   } catch (error) {
     next(error);
   }
+};
+
+const sessionValidator = async (req, res, next) => {
+  const session = await Session.findOne({
+    where: { token: req.tokenRaw },
+  });
+
+  if (!session) {
+    return res.status(401).json({ error: "session expired or invalid" });
+  }
+
+  req.user = await User.findByPk(req.token.id);
+
+  if (!req.user || req.user.disabled) {
+    return res.status(401).json({ error: "user disabled or not found" });
+  }
+
+  next();
 };
 
 const errorHandler = (error, req, res, next) => {
@@ -61,4 +81,4 @@ const errorHandler = (error, req, res, next) => {
   next(error);
 };
 
-module.exports = { blogFinder, errorHandler, tokenExtractor };
+module.exports = { blogFinder, errorHandler, tokenExtractor, sessionValidator };

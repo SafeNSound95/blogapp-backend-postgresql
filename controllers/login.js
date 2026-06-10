@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { SECRET } = require("../utils/config");
 
-const { User } = require("../models");
+const { User, Session } = require("../models");
 
 router.post("/", async (req, res, next) => {
   try {
@@ -31,6 +31,11 @@ router.post("/", async (req, res, next) => {
       },
       SECRET,
     );
+
+    await Session.create({
+      userId: user.id,
+      token,
+    });
 
     res.json({ token, username: user.username, name: user.name });
   } catch (error) {
