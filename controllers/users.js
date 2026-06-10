@@ -49,4 +49,33 @@ router.put("/:username", async (req, res, next) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  const where = {};
+
+  if (req.query.read) {
+    where.read = req.query.read === "true";
+  }
+
+  const user = await User.findByPk(req.params.id, {
+    attributes: ["name", "username"],
+    include: [
+      {
+        model: Blog,
+        as: "readings",
+        through: {
+          attributes: ["read", "id"],
+          where,
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt"],
+        },
+      },
+    ],
+  });
+
+  if (!user) return res.status(404).json({ error: "user doesn't exist" });
+
+  res.json(user);
+});
+
 module.exports = router;
